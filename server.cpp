@@ -58,8 +58,9 @@ int main(int argc, char* argv[]){
     //In this initial version the server will only echo the message received by its only client (the client will receive it's own message)
     //Client sockaddr creation
     sockaddr_in client_addr;
+    socklen_t client_addr_size = sizeof(client_addr);
     //Accept
-    int client_fd = accept(server_fd,(struct sockaddr *)&client_addr,(socklen_t * )sizeof(client_addr));
+    int client_fd = accept(server_fd,(struct sockaddr *)&client_addr,&client_addr_size);
 
     if(client_fd == -1){
         cerr << "Socket accepting error" << endl;
@@ -70,7 +71,7 @@ int main(int argc, char* argv[]){
     }
 
     //Message buffer
-    char* buffer;
+    char buffer[MESSAGE_SIZE];
     int recvBytes = 0;
     int sendBytes = 0;
     bool end = false;

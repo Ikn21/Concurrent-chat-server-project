@@ -21,12 +21,12 @@ int main(int argc, char* argv[]){
     char* SERVER_ADRESSS = argv[2];
 
     //Client sockaddr creation
-    sockaddr_in client_addr;
-    memset(&client_addr,0,sizeof(client_addr));
-    client_addr.sin_family = AF_INET;
-    client_addr.sin_port = htons(SERVER_PORT);
+    sockaddr_in server_addr;
+    memset(&server_addr,0,sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_PORT);
     //We use the inet_pton to convert the IPV4 address to binary form
-    int address_code = inet_pton(AF_INET,SERVER_ADRESSS,&client_addr.sin_addr);
+    int address_code = inet_pton(AF_INET,SERVER_ADRESSS,&server_addr.sin_addr);
 
     if(address_code == -1){
         cerr << "Not valid IP address" << endl;
@@ -43,34 +43,33 @@ int main(int argc, char* argv[]){
     }
 
     //Connection
-    int socket_fd = connect(client_fd,(struct sockaddr* )&client_addr,sizeof(client_addr));
+    int connect_code = connect(client_fd,(struct sockaddr* )&server_addr,sizeof(server_addr));
 
-    if(socket_fd == -1){
+    if(connect_code == -1){
         cerr << "Failed attempt at establishing connection" << endl;
         cerr << "Error: "<< errno << endl;
         exit(1);
     }
 
     //Message buffer
-    char* buffer;
+    char buffer[MESSAGE_SIZE];
     int recvBytes = 0;
     int sendBytes = 0;
     bool end = false;
     while(!end){
         //Send a message to the server
         cout << "Write a message for the server: ", cin >> buffer;
-        sendBytes = send(socket_fd,buffer,sizeof(buffer),0);
+        sendBytes = send(client_fd,buffer,sizeof(buffer),0);
 
         if(sendBytes == -1){
             cerr << "Failed attempt at sending the client's message" << endl;
             cerr << "Error: "<< errno << endl;
             //We close the client's socket
-            close(socket_fd);
             close(client_fd);
             exit(1);
         }
         //receive the server's response
-        recvBytes = recv(socket_fd,buffer,MESSAGE_SIZE,0);
+        recvBytes = recv(client_fd,buffer,MESSAGE_SIZE,0);
 
         if(recvBytes == -1){
             cerr << "Failed attempt at receiving the client's message" << endl;
