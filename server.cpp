@@ -9,9 +9,14 @@ using namespace std;
 const int MESSAGE_SIZE = 40001;
 
 int main(int argc, char* argv[]){
+    //Verification of the adequate number of parameters
+    if(argc != 2){
+        cerr << "Usage: "<< argv[0] << " <Port> " << endl;
+        exit(1);
+    }
+
     string END_MSSG = "END OF COMMUNICATION"; //String for endind communication between server and client
     int SERVER_PORT = atoi(argv[1]);
-    int SERVER_ADDRESS = atoi(argv[2]);
     //server sockaddr_creation
     sockaddr_in addr;
     memset(&addr,0,sizeof(addr)); // We initialize at 0 the memory values of the struct to avoid residual values
