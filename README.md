@@ -5,7 +5,7 @@ Multi-client TCP chat server that handles multiple clients simultaneously, built
 The purpose of this project is to develop a multi-client TCP-based chat server system to explore concurrent programming, networking protocols and database integration
 
 ## Current status
-In development: currently working on v0.1
+In development: currently working on v0.2
 ## Roadmap
 - **v0.1: Basic TCP Server with only one client**
 - **v0.2: Multiple clients with threads, simple broadcast**
