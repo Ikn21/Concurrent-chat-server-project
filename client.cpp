@@ -78,6 +78,10 @@ int main(int argc, char* argv[]){
             close(client_fd);
             exit(1);
         }
+        if(recvBytes == 0){
+            cout << "server closed the connection"<<endl;
+            break;
+        }
 
         cout << "Server's response received" << endl;
 
