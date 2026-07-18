@@ -9,8 +9,15 @@ Monitor::~Monitor(){
         close(socket.client_socket); // For each client, at the end of the life of the monitor, all of the client's socket must be closed
     }
 }
+void Monitor::addVector(int socket_sender){
+    unique_lock<mutex> lock(mtxMonitor);
+    Connected_client client;
+    client.client_socket = socket_sender;
+    client.MarkedForDelete = false;
+    sockets.push_back(client);
+}
 
-void Monitor::RealizeSend(int socket_sender,char buffer[MESSAGE_SIZE]){
+void Monitor::Broadcast(int socket_sender,char buffer[MESSAGE_SIZE]){
     unique_lock<mutex> lock(mtxMonitor);
     int sendBytes = 0;
     //We send the message receive to all client cockets in the sockets vector
@@ -25,11 +32,19 @@ void Monitor::RealizeSend(int socket_sender,char buffer[MESSAGE_SIZE]){
         }
     }
 
+    for(auto it = begin(sockets); it != end(sockets); it++){
+        if(it->MarkedForDelete){
+            close(it->client_socket);
+            it = sockets.erase(it);
+        }
+    }
+
 }
 void Monitor::FreeBlock(int socket_sender){
     unique_lock<mutex> lock(mtxMonitor);
     for(auto it = begin(sockets); it != end(sockets); it++){
         if(it->client_socket == socket_sender){
+            close(it->client_socket);
             it = sockets.erase(it);
         }
     }

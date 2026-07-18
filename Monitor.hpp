@@ -18,6 +18,7 @@ class Monitor{
     public:
         Monitor(); //Constructor
         ~Monitor(); //Destructor
-        void RealizeSend(int socket_sender,char buffer[MESSAGE_SIZE]); //First operation made for sending the message from the sender to the rest of the clients
+        void addVector(int socket_sender); //Adds the socket to the client's socket vector
+        void Broadcast(int socket_sender,char buffer[MESSAGE_SIZE]); //First operation made for sending the message from the sender to the rest of the clients
         void FreeBlock(int socket_sender); //Second operation made for deleting from the socket vector the socket who ends it communication
 };
