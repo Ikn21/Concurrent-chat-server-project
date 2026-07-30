@@ -23,7 +23,7 @@ void Monitor::Broadcast(int socket_sender,char buffer[MESSAGE_SIZE]){
     //We send the message receive to all client cockets in the sockets vector
     for(auto socket : sockets){
         if(socket.client_socket != socket_sender){
-            sendBytes = send(socket.client_socket,buffer,sizeof(buffer),0);
+            sendBytes = send(socket.client_socket,buffer,sizeof(&buffer),0);
 
             if(sendBytes == -1){
                 //We mark the socket for it's elimination from the client's vector
@@ -31,21 +31,28 @@ void Monitor::Broadcast(int socket_sender,char buffer[MESSAGE_SIZE]){
             }
         }
     }
-
-    for(auto it = begin(sockets); it != end(sockets); it++){
+    auto it = begin(sockets);
+    while(it != end(sockets)){
         if(it->MarkedForDelete){
-            close(it->client_socket);
-            it = sockets.erase(it);
+           close(it->client_socket);
+           it = sockets.erase(it); 
+        }
+        else{
+            it++;
         }
     }
 
 }
 void Monitor::FreeBlock(int socket_sender){
     unique_lock<mutex> lock(mtxMonitor);
-    for(auto it = begin(sockets); it != end(sockets); it++){
+    auto it = begin(sockets);
+    while(it != end(sockets)){
         if(it->client_socket == socket_sender){
             close(it->client_socket);
             it = sockets.erase(it);
+        }
+        else{
+            it++;
         }
     }
 }
