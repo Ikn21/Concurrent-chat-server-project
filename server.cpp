@@ -4,19 +4,60 @@
 #include <string.h>
 #include <iostream>
 #include <set>
+#include <thread>
+#include "Monitor.hpp"
 using namespace std;
 
 const int MESSAGE_SIZE = 40001;
 
+void clientService(int client_fd, Monitor &monitor){
+    string END_MSSG = "END OF COMMUNICATION"; //String for endind communication between server and client
+    //We add the client's socket to the monitor's vector
+    monitor.addVector(client_fd);
+    //Message buffer
+    char buffer[MESSAGE_SIZE];
+    int recvBytes = 0;
+    int sendBytes = 0;
+
+    bool out = false;
+    while(!out){
+        //receive the client's message
+        recvBytes = recv(client_fd,buffer,MESSAGE_SIZE,0);
+        if(recvBytes == -1){
+            cerr << "Failed attempt at receiving the client's message" << endl;
+            cerr << "Error: "<< errno << endl;
+            //We close the client's socket
+            monitor.FreeBlock(client_fd);
+            out = true;
+        }
+        else if(recvBytes == 0){
+            cout << "client closed the connection" << endl;
+            monitor.FreeBlock(client_fd);
+        }
+        else{
+            if(buffer != END_MSSG){
+                //The sender broadcast the message to each one of the client's int the monitor's socket vector
+                monitor.Broadcast(client_fd,buffer);
+            }
+            else{
+                monitor.FreeBlock(client_fd);
+                out = true;
+            }
+        }
+    }
+
+}
+
 int main(int argc, char* argv[]){
+    Monitor clientMonitor;
     //Verification of the adequate number of parameters
     if(argc != 2){
         cerr << "Usage: "<< argv[0] << " <Port> " << endl;
         exit(1);
     }
 
-    string END_MSSG = "END OF COMMUNICATION"; //String for endind communication between server and client
     int SERVER_PORT = atoi(argv[1]);
+    vector<thread> clients;
     //server sockaddr_creation
     sockaddr_in addr;
     memset(&addr,0,sizeof(addr)); // We initialize at 0 the memory values of the struct to avoid residual values
@@ -55,75 +96,35 @@ int main(int argc, char* argv[]){
         exit(1);
     }
 
-    //In this initial version the server will only echo the message received by its only client (the client will receive it's own message)
-    //Client sockaddr creation
+    bool end = false;
+    int client_fd;
     sockaddr_in client_addr;
     socklen_t client_addr_size = sizeof(client_addr);
-    //Accept
-    int client_fd = accept(server_fd,(struct sockaddr *)&client_addr,&client_addr_size);
-
-    if(client_fd == -1){
-        cerr << "Socket accepting error" << endl;
-        cerr << "Error: "<< errno << endl;
-        //We close the socket
-        close(server_fd);
-        exit(1);
-    }
-
-    //Message buffer
-    char buffer[MESSAGE_SIZE];
-    int recvBytes = 0;
-    int sendBytes = 0;
-    bool end = false;
     while(!end){
-        //receive the client's message
-        recvBytes = recv(client_fd,buffer,MESSAGE_SIZE,0);
-
-        if(recvBytes == -1){
-            cerr << "Failed attempt at receiving the client's message" << endl;
+        //Accept
+        client_fd = accept(server_fd,(struct sockaddr *)&client_addr,&client_addr_size);
+        
+        if(client_fd == -1){
+            cerr << "Socket accepting error" << endl;
             cerr << "Error: "<< errno << endl;
-            //We close both client and server sockets
-            close(client_fd);
+            //We close the socket
             close(server_fd);
             exit(1);
         }
-        if(recvBytes == 0){
-            cout << "client closed the connection" << endl;
-            break;
-        }
-
-        cout << "Message received" << endl;
-
-        if(buffer == END_MSSG){
-            end = true;
-        }
         else{
-            cout << "Client's message: " << buffer << endl;
-
-            //We send the client's message to the client
-            sendBytes = send(client_fd,buffer,sizeof(buffer),0);
-
-            if(sendBytes == -1){
-                cerr << "Failed attempt at sending the client's message" << endl;
-                cerr << "Error: "<< errno << endl;
-                //We close both client and server sockets
-                close(client_fd);
-                close(server_fd);
-                exit(1);
+            if(!end){
+                //Introduce the client into the client's thread vector
+                clients.push_back(thread(&clientService,client_fd,clientMonitor));
+                cout << "New client accepted: " << client_fd << endl;
+            }
+            else{
+                cout << "Finished" << endl;
             }
         }
     }
-    //Once the communication is finished we close the client socket
-    cerr << "Closing client: " << client_fd << endl;
-    int error_code = close(client_fd);
-    if(error_code == -1){
-        cerr << "Failed attempt at closing the client's socket" << endl;
-    }
     //We close the server socket 
-    error_code = close(server_fd);
+    int error_code = close(server_fd);
     if(error_code == -1){
         cerr << "Failed attempt at closing the server's socket" << endl;
     }
-
-    return error_code;
 }
