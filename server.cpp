@@ -8,16 +8,13 @@
 #include "Monitor.hpp"
 using namespace std;
 
-const int MESSAGE_SIZE = 40001;
-
 void clientService(int client_fd, Monitor &monitor){
     string END_MSSG = "END OF COMMUNICATION"; //String for endind communication between server and client
     //We add the client's socket to the monitor's vector
     monitor.addVector(client_fd);
     //Message buffer
-    char buffer[MESSAGE_SIZE];
+    char buffer[MESSAGE_SIZE]; //MESSAGE SIZE defined in the monitor module
     int recvBytes = 0;
-    int sendBytes = 0;
 
     bool out = false;
     while(!out){
@@ -114,7 +111,7 @@ int main(int argc, char* argv[]){
         else{
             if(!end){
                 //Introduce the client into the client's thread vector
-                clients.push_back(thread(&clientService,client_fd,clientMonitor));
+                clients.push_back(thread(&clientService,client_fd,ref(clientMonitor)));
                 cout << "New client accepted: " << client_fd << endl;
             }
             else{
