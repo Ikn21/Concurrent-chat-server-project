@@ -61,6 +61,8 @@ int main(int argc, char* argv[]){
         cout << "Write a message for the server: ", cin >> buffer;
         sendBytes = send(client_fd,buffer,sizeof(buffer),0);
 
+        cout << buffer << endl; // The client's echo it's own message
+
         if(sendBytes == -1){
             cerr << "Failed attempt at sending the client's message" << endl;
             cerr << "Error: "<< errno << endl;
@@ -69,7 +71,7 @@ int main(int argc, char* argv[]){
             exit(1);
         }
         //receive the server's response
-        recvBytes = recv(client_fd,buffer,MESSAGE_SIZE,0);
+        recvBytes = recv(client_fd,buffer,MESSAGE_SIZE - 1,0);
 
         if(recvBytes == -1){
             cerr << "Failed attempt at receiving the client's message" << endl;
