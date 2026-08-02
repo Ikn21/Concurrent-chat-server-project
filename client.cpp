@@ -71,7 +71,7 @@ int main(int argc, char* argv[]){
             exit(1);
         }
         //receive the server's response
-        recvBytes = recv(client_fd,buffer,MESSAGE_SIZE,0);
+        recvBytes = recv(client_fd,buffer,MESSAGE_SIZE - 1,0);
 
         if(recvBytes == -1){
             cerr << "Failed attempt at receiving the client's message" << endl;
